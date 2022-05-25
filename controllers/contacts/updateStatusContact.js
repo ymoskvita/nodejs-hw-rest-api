@@ -1,15 +1,17 @@
 const { Contact } = require("../../models");
-const { joiSchema } = require("../../models/contact");
+const { statusJoiSchema } = require("../../models/contact");
 
-const updateById = async (req, res) => {
-  const { error } = joiSchema.validate(req.body);
+const updateStatusContact = async (req, res) => {
+  const { error } = statusJoiSchema.validate(req.body);
   if (error) {
     error.status = 400;
     error.message = "missing required name field";
     throw error;
   }
+
   const { contactId } = req.params;
-  const result = await Contact.findByIdAndUpdate(contactId, req.body, {new: true});
+  const { favorite } = req.body;
+  const result = await Contact.findByIdAndUpdate(contactId, {favorite}, {new: true});
   if (!result) {
     const error = new Error(`Contact with id:${contactId} not found`);
     error.status = 404;
@@ -24,4 +26,4 @@ const updateById = async (req, res) => {
   });
 };
 
-module.exports = updateById;
+module.exports = updateStatusContact;
