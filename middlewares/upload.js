@@ -11,7 +11,7 @@ const multerConfig = multer.diskStorage({
         cb(null, file.originalname);
     },
     limits: {
-        limits: 2028
+        limits: 1024 
     }
 });
 
