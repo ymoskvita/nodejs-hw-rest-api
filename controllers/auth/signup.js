@@ -1,10 +1,12 @@
 const { Conflict } = require('http-errors');
 const bcrypt = require('bcrypt');
+const { genSaltSync } = require('bcrypt');
+const { nanoid } = require('nanoid');
 const gravatar = require('gravatar');
 
 const { User } = require('../../models');
 const { joiSignupSchema } = require('../../models/user');
-const { genSaltSync } = require('bcrypt');
+const { sendEmail } = require('../../helpers');
 
 const signup = async (req, res) => {
   const { error } = joiSignupSchema.validate(req.body);
@@ -20,7 +22,14 @@ const signup = async (req, res) => {
     }
     const avatarURL = gravatar.url(email);
     const hashPassword = bcrypt.hashSync(password, genSaltSync(10));
-    await User.create({ avatarURL, email, password: hashPassword, subscription });
+    const verificationToken = nanoid();
+    await User.create({ avatarURL, email, password: hashPassword, subscription, verificationToken });
+    const mail = {
+        to: email,
+        subject: "Confirm Your Email",
+        html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${verificationToken}">Confirm Your Email</a>`
+    };
+    await sendEmail(mail);
     res.status(201).json({
         status: "success",
         code: 201,
@@ -28,7 +37,8 @@ const signup = async (req, res) => {
             user: {
                 avatarURL,
                 email,
-                subscription
+                subscription,
+                verificationToken
             }
         }
     })
